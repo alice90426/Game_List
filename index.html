@@ -140,8 +140,9 @@ async function renderAsImage(htmlContent) {
   tempDiv.style.position = "absolute";
   tempDiv.style.left = "-9999px";
   tempDiv.style.width = "1200px";
-  tempDiv.style.fontFamily = "Arial, sans-serif";
+  tempDiv.style.fontFamily = "Noto Sans TC, 微軟正黑體, Arial, sans-serif";
   tempDiv.style.whiteSpace = "pre-wrap";
+  tempDiv.style.lineHeight = "1.5";      // 調整行距，避免中文字疊在一起
   tempDiv.innerHTML = htmlContent;
   document.body.appendChild(tempDiv);
 
@@ -179,7 +180,11 @@ async function loadTxt(gameCode) {
     const txt = await res.text();
     if (!txt.trim()) throw new Error("File is empty");
     // 把換行轉成 <br> 保留排版
-    const htmlText = txt.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    const htmlText = txt
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\n/g, "<br>");
     await renderAsImage(htmlText);
   } catch(e) {
     contentEl.textContent = "Can't load TXT file";
