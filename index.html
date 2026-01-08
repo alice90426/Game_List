@@ -14,7 +14,10 @@
       right: 30px;
       font-size: 12px;
       color: #555;
-	  border: 1px solid;
+      border: 1px solid;
+      padding: 10px;
+      background: #fff;
+      max-width: 300px;
     }
 
     /* 遊戲選單區域 */
@@ -27,7 +30,21 @@
     #tabs button.active { font-weight: bold; }
 
     /* 內容區 */
-    #content { margin-top: 40px; border: 1px solid #ccc; padding: 10px; min-height: 600px; white-space: pre-wrap; }
+    #content { 
+      margin-top: 40px; 
+      border: 1px solid #ccc; 
+      padding: 10px; 
+      min-height: 600px; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center;
+      background: #f9f9f9;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+    }
   </style>
 </head>
 <body>
@@ -57,99 +74,138 @@
 </div>
 
 <!-- 內容區 -->
-<div id="content">SelectGame</div>
+<div id="content">Select Game</div>
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
-  // 遊戲編號列表
-  const games = ["HT377","HT378"]; // 可依實際加入更多遊戲編號
+const games = ["HT377","HT378"];
+let currentIndex = 0;
+let currentTab = "md";
 
-  let currentIndex = 0;
-  let currentTab = "md";
+const gameSelect = document.getElementById("game-select");
+const contentEl = document.getElementById("content");
+const tabs = document.querySelectorAll("#tabs button");
 
-  const gameSelect = document.getElementById("game-select");
-  const contentEl = document.getElementById("content");
-  const tabs = document.querySelectorAll("#tabs button");
+// 初始化下拉選單
+games.forEach((code, index) => {
+  const option = document.createElement("option");
+  option.value = index;
+  option.textContent = code;
+  gameSelect.appendChild(option);
+});
 
-  // 初始化下拉選單
-  games.forEach((code, index) => {
-    const option = document.createElement("option");
-    option.value = index;
-    option.textContent = code;
-    gameSelect.appendChild(option);
+// Tab 狀態
+function renderTabs() {
+  tabs.forEach(t => t.classList.remove("active"));
+  document.querySelector(`#tabs button[data-tab="${currentTab}"]`).classList.add("active");
+}
+
+// 把文字渲染成 Canvas 圖片
+function renderTextAsImage(text, fontSize = 16, lineHeight = 20, maxWidth = 800) {
+  const lines = text.split("\n");
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = maxWidth;
+  canvas.height = lines.length * lineHeight + 20;
+
+  ctx.fillStyle = "#fff"; // 背景白
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  ctx.fillStyle = "#000"; // 文字黑色
+  ctx.font = `${fontSize}px Arial`;
+  ctx.textBaseline = "top";
+
+  let y = 10;
+  lines.forEach(line => {
+    // 自動換行
+    let remaining = line;
+    while (remaining.length > 0) {
+      let slice = remaining;
+      // 簡單截斷換行
+      while (ctx.measureText(slice).width > maxWidth - 20 && slice.length > 0) {
+        slice = slice.slice(0, -1);
+      }
+      ctx.fillText(slice, 10, y);
+      remaining = remaining.slice(slice.length);
+      y += lineHeight;
+    }
+    y += 0;
   });
 
-  // 渲染 Tab 按鈕狀態
-  function renderTabs() {
-    tabs.forEach(t => t.classList.remove("active"));
-    document.querySelector(`#tabs button[data-tab="${currentTab}"]`).classList.add("active");
-  }
+  return canvas;
+}
 
-  // 載入 MD
-  async function loadMd(gameCode) {
-    const mdPath = `${gameCode}/spec/game_infomation.md`;
-    try {
-      const res = await fetch(mdPath);
-      const mdText = await res.text();
-      contentEl.innerHTML = marked.parse(mdText);
-    } catch(e) {
-      contentEl.textContent = "Can't load file";
-    }
+// 載入 MD
+async function loadMd(gameCode) {
+  const mdPath = `${gameCode}/spec/game_infomation.md`;
+  try {
+    const res = await fetch(mdPath);
+    const mdText = await res.text();
+    const htmlText = marked.parse(mdText);
+    // 將 HTML 轉成純文字（去掉標籤）
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = htmlText;
+    const pureText = tempDiv.innerText;
+    const canvas = renderTextAsImage(pureText, 16, 22);
+    contentEl.innerHTML = "";
+    contentEl.appendChild(canvas);
+  } catch(e) {
+    contentEl.textContent = "Can't load file";
   }
+}
 
-  // 載入 TXT
-  async function loadTxt(gameCode) {
-    const txtPath = `${gameCode}/simulation/simulation_result.txt`; 
-    try {
-      const res = await fetch(txtPath);
-      const txt = await res.text();
-      contentEl.textContent = txt;
-    } catch(e) {
-      contentEl.textContent = "Can't load file";
-    }
+// 載入 TXT
+async function loadTxt(gameCode) {
+  const txtPath = `${gameCode}/simulation/simulation_result.txt`; 
+  try {
+    const res = await fetch(txtPath);
+    const txt = await res.text();
+    const canvas = renderTextAsImage(txt, 16, 22);
+    contentEl.innerHTML = "";
+    contentEl.appendChild(canvas);
+  } catch(e) {
+    contentEl.textContent = "Can't load file";
   }
+}
 
-  // 載入當前 Tab
-  function loadCurrentTab() {
-    const gameCode = games[currentIndex];
-    if (currentTab === "md") {
-      loadMd(gameCode);
-    } else {
-      loadTxt(gameCode);
-    }
-    renderTabs();
-  }
+// 載入當前 Tab
+function loadCurrentTab() {
+  const gameCode = games[currentIndex];
+  if (currentTab === "md") loadMd(gameCode);
+  else loadTxt(gameCode);
+  renderTabs();
+}
 
-  // 改變遊戲
-  function setGame(index) {
-    currentIndex = (index + games.length) % games.length; // 循環
-    gameSelect.value = currentIndex;
+// 改變遊戲
+function setGame(index) {
+  currentIndex = (index + games.length) % games.length;
+  gameSelect.value = currentIndex;
+  loadCurrentTab();
+}
+
+// 下拉選單切換
+gameSelect.onchange = e => setGame(Number(e.target.value));
+
+// 方向鍵切換
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowLeft") setGame(currentIndex - 1);
+  if (e.key === "ArrowRight") setGame(currentIndex + 1);
+});
+
+// 左右按鈕切換
+document.getElementById("prev").onclick = () => setGame(currentIndex - 1);
+document.getElementById("next").onclick = () => setGame(currentIndex + 1);
+
+// Tab 切換
+tabs.forEach(t => {
+  t.onclick = () => {
+    currentTab = t.dataset.tab;
     loadCurrentTab();
   }
+});
 
-  // 下拉選單切換
-  gameSelect.onchange = e => setGame(Number(e.target.value));
-
-  // 方向鍵切換
-  document.addEventListener("keydown", e => {
-    if (e.key === "ArrowLeft") setGame(currentIndex - 1);
-    if (e.key === "ArrowRight") setGame(currentIndex + 1);
-  });
-
-  // 左右按鈕切換
-  document.getElementById("prev").onclick = () => setGame(currentIndex - 1);
-  document.getElementById("next").onclick = () => setGame(currentIndex + 1);
-
-  // Tab 切換
-  tabs.forEach(t => {
-    t.onclick = () => {
-      currentTab = t.dataset.tab;
-      loadCurrentTab();
-    }
-  });
-
-  // 初始化
-  setGame(0);
+// 初始化
+setGame(0);
 </script>
 
 </body>
