@@ -98,7 +98,7 @@ Redistribution, modification, or reverse engineering of the software is not allo
 
   // 載入 TXT
   async function loadTxt(gameCode) {
-    const txtPath = `${gameCode}/simulation/simulation_result.txt`; 
+    const txtPath = `${gameCode}/spec/simulation/simulation_result.txt`; 
     try {
       const res = await fetch(txtPath);
       const txt = await res.text();
