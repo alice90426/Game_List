@@ -156,11 +156,16 @@ async function renderAsImage(htmlContent) {
 async function loadMd(gameCode) {
   try {
     const res = await fetch(`${gameCode}/spec/game_infomation.md`);
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
     const mdText = await res.text();
+    if (!mdText.trim()) throw new Error("File is empty");
     const htmlText = marked.parse(mdText);
     await renderAsImage(htmlText);
   } catch(e) {
     contentEl.textContent = "Can't load MD file";
+    console.warn(e);
   }
 }
 
@@ -168,12 +173,17 @@ async function loadMd(gameCode) {
 async function loadTxt(gameCode) {
   try {
     const res = await fetch(`${gameCode}/simulation/simulation_result.txt`);
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
     const txt = await res.text();
+    if (!txt.trim()) throw new Error("File is empty");
     // 把換行轉成 <br> 保留排版
     const htmlText = txt.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
     await renderAsImage(htmlText);
   } catch(e) {
     contentEl.textContent = "Can't load TXT file";
+    console.warn(e);
   }
 }
 
