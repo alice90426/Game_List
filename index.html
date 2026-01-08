@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GameList</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; position: relative; }
+    
+    /* 右上角版權 */
+    #copyright {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      font-size: 12px;
+      color: #555;
+    }
+
+    /* 遊戲選單區域 */
+    #game-selector { display: flex; align-items: center; margin-bottom: 10px; }
+    #game-selector button { margin: 0 10px; padding: 5px 10px; }
+    select { padding: 5px; }
+
+    /* Tab 按鈕 */
+    #tabs button { margin-right: 10px; padding: 5px 10px; }
+    #tabs button.active { font-weight: bold; }
+
+    /* 內容區 */
+    #content { margin-top: 15px; border: 1px solid #ccc; padding: 10px; min-height: 150px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+
+<!-- 右上版權 -->
+<div id="copyright">
+Free Version
+© Javier Chiang. All rights reserved.
+
+This free version is provided for personal, educational, or evaluation purposes only.
+Commercial use is strictly prohibited without purchasing a valid license.
+
+Redistribution, modification, or reverse engineering of the software is not allowed.
+</div>
+
+<!-- 遊戲選單 -->
+<div id="game-selector">
+  <button id="prev">◀</button>
+  <select id="game-select"></select>
+  <button id="next">▶</button>
+</div>
+
+<!-- 分頁 -->
+<div id="tabs">
+  <button data-tab="md" class="active">GameInformation</button>
+  <button data-tab="txt">SimulationResult</button>
+</div>
+
+<!-- 內容區 -->
+<div id="content">SelectGame</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  // 遊戲編號列表
+  const games = ["HT377","HT378"]; // 可依實際加入更多遊戲編號
+
+  let currentIndex = 0;
+  let currentTab = "md";
+
+  const gameSelect = document.getElementById("game-select");
+  const contentEl = document.getElementById("content");
+  const tabs = document.querySelectorAll("#tabs button");
+
+  // 初始化下拉選單
+  games.forEach((code, index) => {
+    const option = document.createElement("option");
+    option.value = index;
+    option.textContent = code;
+    gameSelect.appendChild(option);
+  });
+
+  // 渲染 Tab 按鈕狀態
+  function renderTabs() {
+    tabs.forEach(t => t.classList.remove("active"));
+    document.querySelector(`#tabs button[data-tab="${currentTab}"]`).classList.add("active");
+  }
+
+  // 載入 MD
+  async function loadMd(gameCode) {
+    const mdPath = `${gameCode}/spec/game_infomation.md`;
+    try {
+      const res = await fetch(mdPath);
+      const mdText = await res.text();
+      contentEl.innerHTML = marked.parse(mdText);
+    } catch(e) {
+      contentEl.textContent = "Can't load file";
+    }
+  }
+
+  // 載入 TXT
+  async function loadTxt(gameCode) {
+    const txtPath = `${gameCode}/simulation/simulation_result.txt`; 
+    try {
+      const res = await fetch(txtPath);
+      const txt = await res.text();
+      contentEl.textContent = txt;
+    } catch(e) {
+      contentEl.textContent = "Can't load file";
+    }
+  }
+
+  // 載入當前 Tab
+  function loadCurrentTab() {
+    const gameCode = games[currentIndex];
+    if (currentTab === "md") {
+      loadMd(gameCode);
+    } else {
+      loadTxt(gameCode);
+    }
+    renderTabs();
+  }
+
+  // 改變遊戲
+  function setGame(index) {
+    currentIndex = (index + games.length) % games.length; // 循環
+    gameSelect.value = currentIndex;
+    loadCurrentTab();
+  }
+
+  // 下拉選單切換
+  gameSelect.onchange = e => setGame(Number(e.target.value));
+
+  // 方向鍵切換
+  document.addEventListener("keydown", e => {
+    if (e.key === "ArrowLeft") setGame(currentIndex - 1);
+    if (e.key === "ArrowRight") setGame(currentIndex + 1);
+  });
+
+  // 左右按鈕切換
+  document.getElementById("prev").onclick = () => setGame(currentIndex - 1);
+  document.getElementById("next").onclick = () => setGame(currentIndex + 1);
+
+  // Tab 切換
+  tabs.forEach(t => {
+    t.onclick = () => {
+      currentTab = t.dataset.tab;
+      loadCurrentTab();
+    }
+  });
+
+  // 初始化
+  setGame(0);
+</script>
+
+</body>
+</html>
