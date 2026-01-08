@@ -5,77 +5,111 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GameList</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; position: relative; }
-    
-    /* 右上角版權 */
-    #copyright {
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+
+    /* 固定頂部區域（版權 + 選單 + tabs） */
+    #header {
       position: fixed;
-      top: 10px;
-      right: 30px;
-      font-size: 12px;
-      color: #555;
-      border: 1px solid;
-      padding: 10px;
+      top: 0;
+      left: 0;
+      right: 0;
       background: #fff;
-      max-width: 300px;
+      z-index: 1000;
+      border-bottom: 1px solid #ccc;
+      padding: 10px 20px;
+      display: flex;
+      flex-direction: column; /* 上方選單+版權在一行，Tabs 在下一行 */
+    }
+
+    /* 第一行: 選單左 + 版權右 */
+    #top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
     }
 
     /* 遊戲選單區域 */
-    #game-selector { display: flex; align-items: center; margin-bottom: 10px; }
+    #game-selector {
+      display: flex;
+      align-items: center;
+    }
     #game-selector button { margin: 0 10px; padding: 5px 10px; }
-    select { padding: 5px; }
+    #game-selector select { padding: 5px; }
+
+    /* 版權訊息 */
+    #copyright {
+      font-size: 12px;
+      color: #555;
+      border: 1px solid #ccc;
+      padding: 10px;
+      background: #f9f9f9;
+      text-align: right;
+      max-width: 50%; /* 可依需求調整寬度 */
+    }
 
     /* Tab 按鈕 */
     #tabs button { margin-right: 10px; padding: 5px 10px; }
     #tabs button.active { font-weight: bold; }
 
     /* 內容區 */
-    #content { 
-      margin-top: 40px; 
-      border: 1px solid #ccc; 
-      padding: 10px; 
-      min-height: 600px; 
-      display: flex; 
-      justify-content: center; 
-      align-items: center;
+    #content-wrapper {
+      margin-top: 220px; /* 留出 header 空間 */
+      display: flex;
+      justify-content: center;
+    }
+
+    #content {
+      border: 1px solid #ccc;
+      padding: 10px;
+      min-height: 600px;
+      max-width: 900px;
       background: #f9f9f9;
     }
 
     canvas {
       max-width: 100%;
       height: auto;
+      display: block;
     }
   </style>
 </head>
 <body>
 
-<!-- 右上版權 -->
-<div id="copyright">
-  <p style="font-size:18px; font-weight:bold; margin:0;">Free Version</p>
-  <p style="font-size:16px; margin:5px 0;">© Javier Chiang. All rights reserved.</p>
-  <p style="font-size:14px; line-height:1.5; margin:5px 0;">
-    This free version is provided for personal, educational, or evaluation purposes only.<br>
-    Commercial use is strictly prohibited without purchasing a valid license.<br>
-    Redistribution, modification, or reverse engineering of the software is not allowed.
-  </p>
-</div>
+<div id="header">
+  <div id="top-row">
+    <!-- 左邊: 遊戲選單 -->
+    <div id="game-selector">
+      <button id="prev">◀</button>
+      <select id="game-select"></select>
+      <button id="next">▶</button>
+    </div>
 
-<!-- 遊戲選單 -->
-<div id="game-selector">
-  <button id="prev">◀</button>
-  <select id="game-select"></select>
-  <button id="next">▶</button>
-</div>
+    <!-- 右邊: 版權 -->
+    <div id="copyright">
+      <p style="font-weight:bold; margin:0;">Free Version</p>
+      <p style="margin:5px 0;">© Javier Chiang. All rights reserved.</p>
+      <p style="margin:5px 0; line-height:1.5;">
+        This free version is for personal/educational use only.<br>
+        Commercial use prohibited without license.
+      </p>
+    </div>
+  </div>
 
-<!-- 分頁 -->
-<div id="tabs">
-  <button data-tab="md" class="active">GameInformation</button>
-  <button data-tab="txt">SimulationResult</button>
+  <!-- 第二行: Tabs -->
+  <div id="tabs">
+    <button data-tab="md" class="active">GameInformation</button>
+    <button data-tab="txt">SimulationResult</button>
+  </div>
 </div>
 
 <!-- 內容區 -->
-<div id="content">Select Game</div>
+<div id="content-wrapper">
+  <div id="content">Select Game</div>
+</div>
 
+<!-- html2canvas -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
 const games = ["HT377","HT378"];
@@ -100,78 +134,53 @@ function renderTabs() {
   document.querySelector(`#tabs button[data-tab="${currentTab}"]`).classList.add("active");
 }
 
-// 把文字渲染成 Canvas 圖片
-function renderTextAsImage(text, fontSize = 16, lineHeight = 20, maxWidth = 800) {
-  const lines = text.split("\n");
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  canvas.width = maxWidth;
-  canvas.height = lines.length * lineHeight + 20;
+// 將文字或 HTML 轉成 Canvas（截圖效果）
+async function renderAsImage(htmlContent) {
+  const tempDiv = document.createElement("div");
+  tempDiv.style.position = "absolute";
+  tempDiv.style.left = "-9999px";
+  tempDiv.style.width = "800px";
+  tempDiv.style.fontFamily = "Arial, sans-serif";
+  tempDiv.style.whiteSpace = "pre-wrap";
+  tempDiv.innerHTML = htmlContent;
+  document.body.appendChild(tempDiv);
 
-  ctx.fillStyle = "#fff"; // 背景白
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-
-  ctx.fillStyle = "#000"; // 文字黑色
-  ctx.font = `${fontSize}px Arial`;
-  ctx.textBaseline = "top";
-
-  let y = 10;
-  lines.forEach(line => {
-    // 自動換行
-    let remaining = line;
-    while (remaining.length > 0) {
-      let slice = remaining;
-      // 簡單截斷換行
-      while (ctx.measureText(slice).width > maxWidth - 20 && slice.length > 0) {
-        slice = slice.slice(0, -1);
-      }
-      ctx.fillText(slice, 10, y);
-      remaining = remaining.slice(slice.length);
-      y += lineHeight;
-    }
-    y += 0;
-  });
-
-  return canvas;
+  const canvas = await html2canvas(tempDiv, { backgroundColor: "#f9f9f9", scale: 2 });
+  document.body.removeChild(tempDiv);
+  
+  contentEl.innerHTML = "";
+  contentEl.appendChild(canvas);
 }
 
 // 載入 MD
 async function loadMd(gameCode) {
-  const mdPath = `${gameCode}/spec/game_infomation.md`;
   try {
-    const res = await fetch(mdPath);
+    const res = await fetch(`${gameCode}/spec/game_infomation.md`);
     const mdText = await res.text();
     const htmlText = marked.parse(mdText);
-    // 將 HTML 轉成純文字（去掉標籤）
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = htmlText;
-    const pureText = tempDiv.innerText;
-    const canvas = renderTextAsImage(pureText, 16, 22);
-    contentEl.innerHTML = "";
-    contentEl.appendChild(canvas);
+    await renderAsImage(htmlText);
   } catch(e) {
-    contentEl.textContent = "Can't load file";
+    contentEl.textContent = "Can't load MD file";
   }
 }
 
 // 載入 TXT
 async function loadTxt(gameCode) {
-  const txtPath = `${gameCode}/simulation/simulation_result.txt`; 
   try {
-    const res = await fetch(txtPath);
+    const res = await fetch(`${gameCode}/simulation/simulation_result.txt`);
     const txt = await res.text();
-    const canvas = renderTextAsImage(txt, 16, 22);
-    contentEl.innerHTML = "";
-    contentEl.appendChild(canvas);
+    // 把換行轉成 <br> 保留排版
+    const htmlText = txt.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    await renderAsImage(htmlText);
   } catch(e) {
-    contentEl.textContent = "Can't load file";
+    contentEl.textContent = "Can't load TXT file";
   }
 }
 
 // 載入當前 Tab
 function loadCurrentTab() {
   const gameCode = games[currentIndex];
-  if (currentTab === "md") loadMd(gameCode);
+  if(currentTab === "md") loadMd(gameCode);
   else loadTxt(gameCode);
   renderTabs();
 }
@@ -188,13 +197,13 @@ gameSelect.onchange = e => setGame(Number(e.target.value));
 
 // 方向鍵切換
 document.addEventListener("keydown", e => {
-  if (e.key === "ArrowLeft") setGame(currentIndex - 1);
-  if (e.key === "ArrowRight") setGame(currentIndex + 1);
+  if(e.key === "ArrowLeft") setGame(currentIndex-1);
+  if(e.key === "ArrowRight") setGame(currentIndex+1);
 });
 
 // 左右按鈕切換
-document.getElementById("prev").onclick = () => setGame(currentIndex - 1);
-document.getElementById("next").onclick = () => setGame(currentIndex + 1);
+document.getElementById("prev").onclick = () => setGame(currentIndex-1);
+document.getElementById("next").onclick = () => setGame(currentIndex+1);
 
 // Tab 切換
 tabs.forEach(t => {
@@ -207,6 +216,5 @@ tabs.forEach(t => {
 // 初始化
 setGame(0);
 </script>
-
 </body>
 </html>
