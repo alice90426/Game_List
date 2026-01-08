@@ -112,9 +112,9 @@ function loadCurrent() {
   const gameID = games[currentIndex];
   let imgPath = "";
   if(currentTab === "md") {
-    imgPath = `public/free/${gameID}/md_result.png`;   // MD PNG
+    imgPath = `${gameID}/game_information.png`;   // MD PNG
   } else {
-    imgPath = `public/free/${gameID}/simulation_result.png`; // TXT PNG
+    imgPath = `${gameID}/simulation_result.png`; // TXT PNG
   }
   contentImg.src = imgPath;
 
