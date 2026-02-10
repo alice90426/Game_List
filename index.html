@@ -79,8 +79,9 @@
   </div>
 
   <div id="tabs">
-    <button data-tab="md" class="active">GameInformation</button>
-    <button data-tab="txt">SimulationResult</button>
+    <button data-tab="en" class="active">GameInformation</button>
+    <button data-tab="zh">遊戲資訊</button>
+    <button data-tab="sim">SimulationResult</button>
   </div>
 </div>
 
@@ -98,7 +99,7 @@ const games = [
 	"HT377","HT381",
 ];
 let currentIndex = 0;
-let currentTab = "!md";
+let currentTab = "en";
 
 const gameSelect = document.getElementById("game-select");
 const contentImg = document.getElementById("content-img");
@@ -116,10 +117,12 @@ games.forEach((code, index) => {
 function loadCurrent() {
   const gameID = games[currentIndex];
   let imgPath = "";
-  if(currentTab === "md") {
-    imgPath = `${gameID}/game_information.png`;   // MD PNG
+  if(currentTab === "en") {
+    imgPath = `${gameID}/game_information_en.png`;   // English
+  } else if(currentTab === "zh") {
+    imgPath = `${gameID}/game_information_zh.png`;   // Chinese
   } else {
-    imgPath = `${gameID}/simulation_result.png`; // TXT PNG
+    imgPath = `${gameID}/simulation_result.png`; // Mock Data
   }
   contentImg.src = imgPath;
 
