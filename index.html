@@ -1,166 +1,189 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GameList</title>
-<style>
-  body { font-family: Arial, sans-serif; padding: 20px; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GameList</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
 
-  /* 固定頂部區域（版權 + 選單 + tabs） */
-  #header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    background: #fff;
-    z-index: 1000;
-    border-bottom: 1px solid #ccc;
-    padding: 10px 20px;
-    display: flex;
-    flex-direction: column;
-  }
+    /* 固定頂部區域（版權 + 選單 + tabs） */
+    #header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      z-index: 1000;
+      border-bottom: 1px solid #ccc;
+      padding: 10px 20px;
+      display: flex;
+      flex-direction: column;
+    }
 
-  #top-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-  }
+    #top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
 
-  #game-selector { display: flex; align-items: center; }
-  #game-selector button { margin: 0 10px; padding: 5px 10px; }
-  #game-selector select { padding: 5px; }
+    #game-selector {
+      display: flex;
+      align-items: center;
+    }
 
-  #copyright {
-    font-size: 12px;
-    color: #555;
-    border: 1px solid #ccc;
-    padding: 10px;
-    background: #f9f9f9;
-    text-align: right;
-    max-width: 50%;
-  }
+    #game-selector button {
+      margin: 0 10px;
+      padding: 5px 10px;
+    }
 
-  #tabs button { margin-right: 10px; padding: 5px 10px; }
-  #tabs button.active { font-weight: bold; }
+    #game-selector select {
+      padding: 5px;
+    }
 
-  #content-wrapper {
-    margin-top: 150px;
-    display: flex;
-    justify-content: center;
-  }
+    #copyright {
+      font-size: 12px;
+      color: #555;
+      border: 1px solid #ccc;
+      padding: 10px;
+      background: #f9f9f9;
+      text-align: right;
+      max-width: 50%;
+    }
 
-  #content img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    border: 1px solid #ccc;
-  }
-</style>
+    #tabs button {
+      margin-right: 10px;
+      padding: 5px 10px;
+    }
+
+    #tabs button.active {
+      font-weight: bold;
+    }
+
+    #content-wrapper {
+      margin-top: 150px;
+      display: flex;
+      justify-content: center;
+    }
+
+    #content img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      border: 1px solid #ccc;
+    }
+  </style>
 </head>
+
 <body>
 
-<div id="header">
-  <div id="top-row">
-    <div id="game-selector">
-      <button id="prev">◀</button>
-      <select id="game-select"></select>
-      <button id="next">▶</button>
+  <div id="header">
+    <div id="top-row">
+      <div id="game-selector">
+        <button id="prev">◀</button>
+        <select id="game-select"></select>
+        <button id="next">▶</button>
+      </div>
+      <div id="copyright">
+        <p style="font-weight:bold; margin:0;">Free Version</p>
+        <p style="margin:5px 0;">© Javier Chiang. All rights reserved.</p>
+        <p style="margin:5px 0; line-height:1.5;">
+          This free version is for personal/educational use only.<br>
+          Commercial use prohibited without license.
+        </p>
+      </div>
     </div>
-    <div id="copyright">
-      <p style="font-weight:bold; margin:0;">Free Version</p>
-      <p style="margin:5px 0;">© Javier Chiang. All rights reserved.</p>
-      <p style="margin:5px 0; line-height:1.5;">
-        This free version is for personal/educational use only.<br>
-        Commercial use prohibited without license.
-      </p>
+
+    <div id="tabs">
+      <button data-tab="en" class="active">GameInformation</button>
+      <button data-tab="zh">遊戲資訊</button>
+      <button data-tab="sim">SimulationResult</button>
     </div>
   </div>
 
-  <div id="tabs">
-    <button data-tab="en" class="active">GameInformation</button>
-    <button data-tab="zh">遊戲資訊</button>
-    <button data-tab="sim">SimulationResult</button>
+  <div id="content-wrapper">
+    <div id="content">
+      <img id="content-img" src="" alt="Can't load file">
+    </div>
   </div>
-</div>
 
-<div id="content-wrapper">
-  <div id="content">
-    <img id="content-img" src="" alt="Can't load file">
-  </div>
-</div>
+  <script>
+    const games = [
+      "HQ001", "HQ005", "HQ006", "HQ007", "HQ008", "HQ009", "HQ010", "HQ012", "HQ015", "HQ016",
+      "HT232", "HT236", "HT239", "HT244", "HT250", "HT262", "HT266", "HT271", "HT275", "HT277",
+      "HT284", "HT288", "HT289", "HT298", "HT305", "HT312", "HT314", "HT317", "HT323", "HT325",
+      "HT327", "HT332", "HT334", "HT340", "HT346", "HT349", "HT351", "HT357", "HT358", "HT370",
+      "HT377", "HT381",
+    ];
+    let currentIndex = 0;
+    let currentTab = "en";
 
-<script>
-const games = [
-	"HT232","HT236","HT239","HT244","HT250","HT262","HT266","HT271","HT275","HT277",
-	"HT284","HT288","HT289","HT298","HT305","HT312","HT314","HT317","HT323","HT325",
-	"HT327","HT332","HT334","HT340","HT346","HT349","HT351","HT357","HT358","HT370",
-	"HT377","HT381",
-];
-let currentIndex = 0;
-let currentTab = "en";
+    const gameSelect = document.getElementById("game-select");
+    const contentImg = document.getElementById("content-img");
+    const tabs = document.querySelectorAll("#tabs button");
 
-const gameSelect = document.getElementById("game-select");
-const contentImg = document.getElementById("content-img");
-const tabs = document.querySelectorAll("#tabs button");
+    // 初始化下拉選單
+    games.forEach((code, index) => {
+      const option = document.createElement("option");
+      option.value = index;
+      option.textContent = code;
+      gameSelect.appendChild(option);
+    });
 
-// 初始化下拉選單
-games.forEach((code, index) => {
-  const option = document.createElement("option");
-  option.value = index;
-  option.textContent = code;
-  gameSelect.appendChild(option);
-});
+    // 切換圖片
+    function loadCurrent() {
+      const gameID = games[currentIndex];
+      let imgPath = "";
+      if (currentTab === "en") {
+        imgPath = `${gameID}/game_information_en.png`;   // English
+      } else if (currentTab === "zh") {
+        imgPath = `${gameID}/game_information_zh.png`;   // Chinese
+      } else {
+        imgPath = `${gameID}/simulation_result.png`; // Mock Data
+      }
+      contentImg.src = imgPath;
 
-// 切換圖片
-function loadCurrent() {
-  const gameID = games[currentIndex];
-  let imgPath = "";
-  if(currentTab === "en") {
-    imgPath = `${gameID}/game_information_en.png`;   // English
-  } else if(currentTab === "zh") {
-    imgPath = `${gameID}/game_information_zh.png`;   // Chinese
-  } else {
-    imgPath = `${gameID}/simulation_result.png`; // Mock Data
-  }
-  contentImg.src = imgPath;
+      tabs.forEach(t => t.classList.remove("active"));
+      document.querySelector(`#tabs button[data-tab="${currentTab}"]`).classList.add("active");
+    }
 
-  tabs.forEach(t => t.classList.remove("active"));
-  document.querySelector(`#tabs button[data-tab="${currentTab}"]`).classList.add("active");
-}
+    // 改變遊戲
+    function setGame(index) {
+      currentIndex = (index + games.length) % games.length;
+      gameSelect.value = currentIndex;
+      loadCurrent();
+    }
 
-// 改變遊戲
-function setGame(index){
-  currentIndex = (index + games.length) % games.length;
-  gameSelect.value = currentIndex;
-  loadCurrent();
-}
+    // 下拉選單
+    gameSelect.onchange = e => setGame(Number(e.target.value));
 
-// 下拉選單
-gameSelect.onchange = e => setGame(Number(e.target.value));
+    // 左右方向鍵切換
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft") setGame(currentIndex - 1);
+      if (e.key === "ArrowRight") setGame(currentIndex + 1);
+    });
 
-// 左右方向鍵切換
-document.addEventListener("keydown", e => {
-  if(e.key === "ArrowLeft") setGame(currentIndex-1);
-  if(e.key === "ArrowRight") setGame(currentIndex+1);
-});
+    // 左右按鈕
+    document.getElementById("prev").onclick = () => setGame(currentIndex - 1);
+    document.getElementById("next").onclick = () => setGame(currentIndex + 1);
 
-// 左右按鈕
-document.getElementById("prev").onclick = () => setGame(currentIndex-1);
-document.getElementById("next").onclick = () => setGame(currentIndex+1);
+    // Tab 切換
+    tabs.forEach(t => {
+      t.onclick = () => {
+        currentTab = t.dataset.tab;
+        loadCurrent();
+      }
+    });
 
-// Tab 切換
-tabs.forEach(t => {
-  t.onclick = () => {
-    currentTab = t.dataset.tab;
-    loadCurrent();
-  }
-});
-
-// 初始化
-setGame(0);
-</script>
+    // 初始化
+    setGame(0);
+  </script>
 
 </body>
+
 </html>
